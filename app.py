@@ -89,7 +89,7 @@ def document_process(path):
         model="gemini-embedding-2-preview"
     )
 
-    ## Vector Store
+    ## Vector Store Memory Database
     vector_db = InMemoryVectorStore.from_documents(
         documents=docs,
         embedding=embeddings
