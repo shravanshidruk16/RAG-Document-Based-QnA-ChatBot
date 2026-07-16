@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import tempfile
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
@@ -29,7 +30,7 @@ def document_process(path):
     loader = PyPDFLoader(path)
     docs = loader.load()
 
-    print(len(docs))
+    # print(len(docs))
 
     cleaned_docs = []
 
@@ -82,7 +83,7 @@ def document_process(path):
 
     docs = splitter.split_documents(cleaned_docs)
 
-    print("Chunks :", len(docs))
+    # print("Chunks :", len(docs))
 
     ## Embedding Generation
     embeddings = GoogleGenerativeAIEmbeddings(
@@ -100,8 +101,8 @@ def document_process(path):
 
 
 st.set_page_config(page_icon="assets/image.png",page_title="ExamSaar")
-st.subheader("ExamSaar - AI-Powered SPPU Exam Paper Intelligence 💻",text_alignment="center")
-st.subheader("Analyze Previous Year Papers • Find Repeated Questions • Predict Trends • Prepare Smarter",text_alignment="center")
+st.subheader("ExamSaar - AI Powered SPPU Exam Paper Intelligence 💻",text_alignment="center")
+st.subheader("Analyze Previous Year Papers  \n• Find Repeated Questions  \n• Predict Trends  \n• Prepare Smarter",text_alignment="center")
 
 if "document_uploaded" not in st.session_state:
     st.session_state.document_uploaded = False
@@ -111,11 +112,16 @@ if not st.session_state.document_uploaded:
     file = st.file_uploader(label="Upload Your Exam Document Here",type="pdf")
 
     if file:
-        with open("uploaded_document.pdf","wb") as f:
-            f.write(file.getvalue())
-        
+        # Create a temporary PDF file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(file.getvalue())
+            pdf_path = tmp.name
+
         with st.spinner("Processing..."):
-            document_process("./uploaded_document.pdf")
+            document_process(pdf_path)
+
+        # Delete the temporary PDF after processing
+        os.remove(pdf_path)
 
         st.markdown("Document Processed Successfully...!!!✅")
         sleep(2)
@@ -216,3 +222,14 @@ if st.session_state.document_uploaded and st.session_state.vector_db:
         except BadRequestError as e:
             print("\nLLM answer generation failed")
             print(e)
+
+
+st.markdown(
+    """
+    <div style="text-align:center; color:#808080; font-size:13px;">
+        © 2026 <b>ExamSaar</b> | AI-Powered SPPU PYQ Exam Assistant <br>
+        Developed by <b>Shravan Shidruk</b> • Coders Of Pune
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
